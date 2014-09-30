@@ -1,0 +1,73 @@
+myApp.filter("dateFilter", [function ($filter) {
+    return function (value) {
+         if (value) {
+             value = value.replace(/\D/g, "");
+
+             if (value.length == 8) {
+                 value = value.substr(0, 2) + "/" + value.substr(2, 2) + "/" + value.substr(4);
+                 return value;
+            }
+            else
+                value = null;
+          
+           return value;
+        }
+    }
+}]);
+
+myApp.directive('validDate', function ($filter, $window, $parse, $timeout) {
+    var dateFilter = $filter("dateFilter");
+    return {
+        require: '?ngModel',
+        restrict: 'A',
+        compile: function () {
+            var moment = $window.moment;
+            var getter, setter;
+            return function (scope, element, attrs, ngModel) {
+                //Declaring the getter and setter
+                getter = $parse(attrs.ngModel);
+                setter = getter.assign;
+                // If the ngModel directive is used, then set the initial value and keep it in sync
+                if (ngModel) {
+                    element.on('blur', function (event) {
+                        var date = $filter('dateFilter')(element.val(), "MM/dd/yyyy");
+                        // if the date entered is a valid date then save the value
+                        var today = new Date();
+                        var someDate = new Date(date);
+                        var someDate1 = $filter('dateFilter')(element.val(), "MM/dd/yyyy");
+                        var isdate = $filter('isDate')(someDate1, "MM/dd/yyyy");
+                        if (isdate) {
+                            //if (Math.abs(someDate.getTime() / (1000 * 60 * 60 * 24)) <= Math.abs(today.getTime() / (1000 * 60 * 60 * 24))) {
+                                if (date != undefined && date != null && date.length == 10) {
+                                    element.css('background', 'white');
+                                    
+                                    console.log('change value to ' + element.val());
+                                    scope.$apply(function () {
+                                        setter(scope, date);
+                                    });
+                                }                                
+                            //}                           
+                        }
+                        else if (date == undefined || date == null)
+                        {   
+                            element[0].value = "";
+                            scope.$apply(function () {
+                                setter(scope, '');
+                            });
+                        }
+                        else {
+                            console.log('INCORRECT VALUE ENTERED');
+                            element.css('background', 'pink');
+                            
+                            alert('Date is not valid');
+                            scope.$apply(function () {
+                                setter(scope, date);
+                            });
+                            
+                        }
+                    });
+                }
+            };
+        }
+    };
+});

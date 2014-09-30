@@ -1,0 +1,57 @@
+myApp.filter("ssn", [function () {
+    return function (value) {
+        if (value) {
+            if (value) {
+                if (value.length >= 9) {
+                    return value.substr(0, 3) + "-" + value.substr(3, 2) + "-" + value.substr(5);
+                } else if (value.length >= 5) {
+                    return value.substr(0, 3) + "-" + value.substr(3, 2) + "-" + value.substr(5);
+                } else if (value.length >= 3) {
+                    return value.substr(0, 3) + "-" + value.substr(3);
+                }
+
+            }
+            return value;
+        }
+    }
+}]);
+myApp.filter("ssnReverse", [function () {
+    return function (value) {
+        if (value) {
+            return value.replace(/\D/g, "").substr(0, 9);
+        }
+        return value;
+    };
+}]);
+myApp.directive('ssnField', function ($filter) {
+    var ssnFlter = $filter("ssn");
+    var ssnReversedFlter = $filter("ssnReverse");
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function (scope, element, attr, ctrl) {
+
+            var formatter = function (value) {
+                return ssnFlter(value);
+            };
+            var parser = function (value) {
+                var formatted = ssnReversedFlter(value);;
+                element.val(ssnFlter(formatted));
+                return formatted;
+            };
+            ctrl.$formatters.push(formatter);
+
+            ctrl.$parsers.push(parser);
+           
+            element.bind("change", function () {
+                if (ctrl.$invalid) return;
+                var formattedModel = format(ctrl.$modelValue);
+                if (formattedModel !== ctrl.$viewValue) {
+                    element.val(formattedModel);
+                }
+            });
+
+            
+        }
+    };
+});
